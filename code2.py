@@ -32,15 +32,18 @@ class BoardGameMechanicsAnalyzer:
         print(f"ChatGPT response for {game_name} mechanics verification:\n{chatgpt_response}")
 
     def ask_chatgpt(self, prompt):
+
         # Send the prompt to ChatGPT
-        response = api_key.completions.create(
-            engine="gpt-3.5-turbo", 
-            prompt=prompt,
+        response = self.api_key.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=150
         )
 
         # Extract and return the generated response
-        return response['choices'][0]['text']
+        return response.choices[0].message
 
 
 #show

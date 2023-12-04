@@ -1,5 +1,7 @@
 import pandas as pd
 from openai import OpenAI
+import ast
+import re
 
 # Info:
 dataset_path = 'bgg_dataset.csv'
@@ -21,15 +23,27 @@ class BoardGameMechanicsAnalyzer:
 
         return df
 
-    def query_mechanics_with_chatgpt(self, game_name, mechanics_list):
+    def query_mechanics_with_chatgpt(self, game_name):
         # Prepare a prompt for ChatGPT
-        prompt = f"Verify which mechanics for the game {game_name} are accurate: {', '.join(mechanics_list)}"
+        prompt = f"Which mechanics does the game {game_name} has? Only give it in the form of a python list, no extra text"
 
         # Send the prompt to ChatGPT and get the response
-        chatgpt_response = self.ask_chatgpt(prompt)
+        full_chatgpt_response = self.ask_chatgpt(prompt)
 
-        # Print the response
-        print(f"ChatGPT response for {game_name} mechanics verification:\n{chatgpt_response}")
+        # Extract the content from the ChatCompletionMessage
+        response_content = full_chatgpt_response.content
+
+        # Use regular expressions to find the Python list
+        match = re.search(r'\[.*\]', response_content)
+
+        # Extract the matched substring
+        python_list_string = match.group(0)
+
+        # make a list of the output
+        chatgpt_response_list = ast.literal_eval(python_list_string)
+        
+        # Now, 'python_list' contains the list of mechanics
+        print(chatgpt_response_list)
 
     def ask_chatgpt(self, prompt):
 
@@ -52,7 +66,6 @@ cleaned_data = analyzer.data
 
 # Specify a game name and its associated mechanics
 game_name = 'Gloomhaven'
-mechanics_list = ['Action Queue', 'Action Retrieval', 'Campaign / Battle Card Driven']
 
 # Query ChatGPT about the accuracy of mechanics for the specified game
-analyzer.query_mechanics_with_chatgpt(game_name, mechanics_list)
+analyzer.query_mechanics_with_chatgpt(game_name)

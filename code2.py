@@ -1,5 +1,6 @@
-import pandas as pd
 from openai import OpenAI
+import pandas as pd
+import unittest
 import ast
 import re
 
@@ -43,7 +44,23 @@ class BoardGameMechanicsAnalyzer:
         chatgpt_response_list = ast.literal_eval(python_list_string)
         
         # Now, 'python_list' contains the list of mechanics
-        print(chatgpt_response_list)
+        get_common = self.accuracy_chatgpt(chatgpt_response_list, game_name)
+        print(f"this is from chatgpt: {chatgpt_response_list}")
+    
+    def accuracy_chatgpt(self,chatgpt_response_list, game_name):
+        df = pd.read_csv(self.dataset_path, sep=';')
+        # Check if the item is in the 'Name' column
+        if game_name in df['Name'].values:
+            # Get the value corresponding to the specified item name
+            mechanics_from_database = df.loc[df['Name'] == game_name, ['Mechanics']].values[0]
+
+        else:
+            print(f"{game_name} not found in the dataset.")
+
+        # compare the list of the db and chatgpt with each other
+        common_elements = len(set(mechanics_from_database) & set(chatgpt_response_list))
+        print(f"these are from the database: {mechanics_from_database}")
+        print(f"these are the common elements: {common_elements}")
 
     def ask_chatgpt(self, prompt):
 
@@ -65,7 +82,8 @@ analyzer = BoardGameMechanicsAnalyzer(dataset_path, api_key)
 cleaned_data = analyzer.data
 
 # Specify a game name and its associated mechanics
-game_name = 'Gloomhaven'
+game_name = 'Pandemic Legacy: Season 1'
 
 # Query ChatGPT about the accuracy of mechanics for the specified game
 analyzer.query_mechanics_with_chatgpt(game_name)
+

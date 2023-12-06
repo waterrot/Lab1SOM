@@ -6,7 +6,7 @@ import re
 
 # Info:
 dataset_path = 'bgg_dataset.csv'
-api_key = OpenAI(api_key="")
+api_key = OpenAI(api_key="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")
 
 
 # Class
@@ -43,9 +43,8 @@ class BoardGameMechanicsAnalyzer:
         # make a list of the output
         chatgpt_response_list = ast.literal_eval(python_list_string)
         
-        # Now, 'python_list' contains the list of mechanics
+        # output the results
         get_common = self.accuracy_chatgpt(chatgpt_response_list, game_name)
-        print(f"this is from chatgpt: {chatgpt_response_list}")
     
     def accuracy_chatgpt(self,chatgpt_response_list, game_name):
         df = pd.read_csv(self.dataset_path, sep=';')
@@ -53,14 +52,29 @@ class BoardGameMechanicsAnalyzer:
         if game_name in df['Name'].values:
             # Get the value corresponding to the specified item name
             mechanics_from_database = df.loc[df['Name'] == game_name, ['Mechanics']].values[0]
+            # Convert the array to a list of strings
+            mechanics_from_database_list = []
+
+            # Iterate through the array and extract each string element
+            for item in mechanics_from_database:
+                # Split the item into individual mechanics
+                mechanics = item.split(",")
+
+                # Append each mechanic to the list
+                for mechanic in mechanics:
+                    mechanics_from_database_list.append(mechanic)
+            mechanics_from_database_list = [item.strip() for item in mechanics_from_database_list]
 
         else:
             print(f"{game_name} not found in the dataset.")
 
         # compare the list of the db and chatgpt with each other
-        common_elements = len(set(mechanics_from_database) & set(chatgpt_response_list))
-        print(f"these are from the database: {mechanics_from_database}")
+        common_elements = len(set(mechanics_from_database_list) & set(chatgpt_response_list))
+        accuracy_compare = common_elements/len(mechanics_from_database_list)
+        print(f"these are from the database: {mechanics_from_database_list}")
+        print(f"this is from chatgpt: {chatgpt_response_list}")
         print(f"these are the common elements: {common_elements}")
+        print(f"this is the accuracy: {accuracy_compare}")
 
     def ask_chatgpt(self, prompt):
 

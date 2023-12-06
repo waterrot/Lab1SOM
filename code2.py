@@ -6,8 +6,9 @@ import re
 
 # Info:
 dataset_path = 'bgg_dataset.csv'
-api_key = OpenAI(api_key="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")
+api_key = OpenAI(api_key="")
 
+Hi = "Hi"
 
 # Class
 class BoardGameMechanicsAnalyzer:

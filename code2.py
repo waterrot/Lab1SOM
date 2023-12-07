@@ -1,12 +1,14 @@
 from openai import OpenAI
 import pandas as pd
-import unittest
+import unittest 
 import ast
 import re
 
 # Info:
 dataset_path = 'bgg_dataset.csv'
-api_key = OpenAI(api_key="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")
+api_key = OpenAI(api_key="")
+
+Hi = "Hi"
 
 # Class
 class BoardGameMechanicsAnalyzer:
@@ -126,3 +128,25 @@ cleaned_data = analyzer.data
 # Query ChatGPT about the accuracy of mechanics for the specified game
 analyzer.query_mechanics_with_chatgpt()
 
+
+class test_class(unittest.TestCase):
+
+    def test_dataframe_clean(self):
+        # test if empty collums have acctualy been removed from the database
+        self.assertTrue(analyzer.data['Name'].notnull().all(), "Missing values in 'Name' column")
+        self.assertTrue(analyzer.data['Year Published'].notnull().all(), "Missing values in 'Year Published' column")
+        self.assertTrue(analyzer.data['Mechanics'].notnull().all(), "Missing values in 'Mechanics' column")
+    
+    def test_api_unreachable_error(self):
+        # Assume chat_gpt_function sends a request to the ChatGPT API
+        # For the sake of this example, let's mock the function to simulate an API unreachable scenario
+        with unittest.mock.patch('analyzer.ask_chatgpt') as mock_function:
+            # Set the side effect of the mock function to raise a ConnectionError
+            mock_function.side_effect = ConnectionError("Unable to reach ChatGPT API")
+
+            # Call the function and expect it to raise a ConnectionError
+            with self.assertRaises(ConnectionError):
+                ask_chatgpt("Hello, ChatGPT!")
+
+if __name__ == '__main__':
+    unittest.main()

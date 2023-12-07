@@ -6,9 +6,7 @@ import re
 
 # Info:
 dataset_path = 'bgg_dataset.csv'
-api_key = OpenAI(api_key="")
-
-Hi = "Hi"
+api_key = OpenAI(api_key="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")
 
 # Class
 class BoardGameMechanicsAnalyzer:
@@ -25,10 +23,30 @@ class BoardGameMechanicsAnalyzer:
 
         return df
 
-    def query_mechanics_with_chatgpt(self, game_name):
-        # Prepare a prompt for ChatGPT
-        prompt = f"Which mechanics does the game {game_name} has? Only give it in the form of a python list, no extra text"
+    def get_input_data(self):
+        input_data = []
+        with open('game_list.txt', 'r') as file:
+            for line in file:
+                items = line.split(";")
+                game_info = {}
 
+                for index, item in enumerate(items):
+                    if index % 2 == 0:
+                        game_info['Name'] = item.strip()
+                    else:
+                        game_info['Year Published'] = item.strip()
+
+                input_data.append(game_info)
+
+        return input_data
+
+    def query_mechanics_with_chatgpt(self):
+        # import the data from the input txt file
+        input_data = self.get_input_data()
+        
+        # Prepare a prompt for ChatGPT
+        prompt = f"Add for each of the following games an extra key to the dict named 'Mechanics'. add to the value a string with the mechanics from that game (corresponding to the right publish year). Since there can be and probably will be multiple mechanics seperate these mechanics within the string with a comma, and if there is no mechanic add a value of 'No mechanic found'. Give no extra text as answer, only the new dictionary. {input_data}"
+        
         # Send the prompt to ChatGPT and get the response
         full_chatgpt_response = self.ask_chatgpt(prompt)
 
@@ -38,16 +56,26 @@ class BoardGameMechanicsAnalyzer:
         # Use regular expressions to find the Python list
         match = re.search(r'\[.*\]', response_content)
 
-        # Extract the matched substring
-        python_list_string = match.group(0)
+        if match:
+            # Extract the matched substring
+            python_dict_string = match.group(0)
 
-        # make a list of the output
-        chatgpt_response_list = ast.literal_eval(python_list_string)
-        
-        # output the results
-        get_common = self.accuracy_chatgpt(chatgpt_response_list, game_name)
+            try:
+                # Use the ast module to safely convert the string to a Python dictionary
+                chatgpt_response_dict = ast.literal_eval(python_dict_string)
+                # Now, 'python_dict' contains the dictionary of mechanics
+                print(chatgpt_response_dict)
+            except (SyntaxError, ValueError) as e:
+                print(f"Error converting string to dictionary: {e}")
+
+        else:
+            print("No Python dictionary found in the response.")
+
+        #get_common = self.accuracy_chatgpt(chatgpt_response_dict, game_name)
+        #print(chatgpt_response_dict)
     
-    def accuracy_chatgpt(self,chatgpt_response_list, game_name):
+
+    def accuracy_chatgpt(self,chatgpt_response_dict, game_name):
         df = pd.read_csv(self.dataset_path, sep=';')
         # Check if the item is in the 'Name' column
         if game_name in df['Name'].values:
@@ -85,20 +113,16 @@ class BoardGameMechanicsAnalyzer:
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=150
+            max_tokens=250
         )
 
         # Extract and return the generated response
         return response.choices[0].message
 
-
 #show
 analyzer = BoardGameMechanicsAnalyzer(dataset_path, api_key)
 cleaned_data = analyzer.data
 
-# Specify a game name and its associated mechanics
-game_name = 'Pandemic Legacy: Season 1'
-
 # Query ChatGPT about the accuracy of mechanics for the specified game
-analyzer.query_mechanics_with_chatgpt(game_name)
+analyzer.query_mechanics_with_chatgpt()
 

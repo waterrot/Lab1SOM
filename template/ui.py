@@ -1,9 +1,11 @@
 from tariefeenheden import Tariefeenheden
 import tkinter as tk
+from tkinter import messagebox
 from pricing_table import PricingTable
 from creditcard import CreditCard
 from debitcard import DebitCard
 from coin_machine import IKEAMyntAtare2000
+from raise_error import Error
 from ui_info import UIPayment, UIClass, UIWay, UIDiscount, UIPayment, UIInfo
 
 
@@ -14,6 +16,10 @@ class UI(tk.Frame):
 		self.widgets()
 
 	def handle_payment(self, info: UIInfo):
+		if info.from_station == info.to_station:
+			e = Error()
+			e.illegalRoute()
+			
 
 		# **************************************
 		# Below is the code you need to refactor
@@ -46,19 +52,19 @@ class UI(tk.Frame):
 		if info.payment == UIPayment.CreditCard:
 			c = CreditCard()
 			c.connect()
-			ccid: int = c.begin_transaction(round(price, 2))
+			ccid: int = c.begin_transaction("{:.2f}".format(price))
 			c.end_transaction(ccid)
 			c.disconnect()
 		elif info.payment == UIPayment.DebitCard:
 			d = DebitCard()
 			d.connect()
-			dcid: int = d.begin_transaction(round(price, 2))
+			dcid: int = d.begin_transaction("{:.2f}".format(price))
 			d.end_transaction(dcid)
 			d.disconnect()
 		elif info.payment == UIPayment.Cash:
 			coin = IKEAMyntAtare2000()
 			coin.starta()
-			coin.betala(int(round(price * 100)))
+			coin.betala(int(price*100))
 			coin.stoppa()
 
 #region UI Set-up below -- you don't need to change anything
@@ -121,6 +127,11 @@ class UI(tk.Frame):
 
 		# Pay button
 		tk.Button(self.master, text="Pay", command=self.on_click_pay).pack(side=tk.RIGHT, ipadx=10, padx=10, pady=10)
+
+		# Illegal addition to this code :)
+		# Raise error message box
+		error_frame = tk.Frame(self.master, highlightbackground="#cccccc", highlightthickness=1)
+		error_frame.pack(fill=tk.BOTH, expand=1, padx=10, pady=10)
 
 		self.pack(fill=tk.BOTH, expand=1)
 	

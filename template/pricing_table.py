@@ -1,3 +1,5 @@
+import math
+
 class PricingTable:
 
     @staticmethod
@@ -18,6 +20,13 @@ class PricingTable:
             price = 2.20
         else:
             raise Exception("Unknown column number")
+        
 
-        price = price * 0.02 * tariefeenheden
-        return round(price, 2)
+        # given price calculation by NS
+        priceCalc = price * 0.02 * tariefeenheden
+    
+        # Round price to higher multiple of € 0,10
+        price = math.ceil(priceCalc * 10) / 10
+
+        # Format it to print with an added zero, instead of e.g. 5,8 -> 5,80
+        return price

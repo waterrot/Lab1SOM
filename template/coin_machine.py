@@ -10,3 +10,13 @@ class IKEAMyntAtare2000:
 		
 	def betala(self, pris: int):
 		messagebox.showinfo(message = f"{pris} cent")
+
+class coinMachine:
+	def start(self):
+		pass
+
+	def stop(self):
+		pass
+
+	def payment(self, pris: int):
+		pass

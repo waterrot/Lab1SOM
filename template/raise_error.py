@@ -6,3 +6,4 @@ class Error():
         messagebox.showinfo(message = "Its not possible to travel to the same station")
 
 
+print("test")

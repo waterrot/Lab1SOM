@@ -1,5 +1,8 @@
 from tariefeenheden import Tariefeenheden
 import tkinter as tk
+import os
+import json
+from datetime import datetime
 from tkinter import messagebox
 from pricing_table import PricingTable
 from creditcard import CreditCard
@@ -9,11 +12,47 @@ from raise_error import Error
 from ui_info import UIPayment, UIClass, UIWay, UIDiscount, UIPayment, UIInfo
 
 
+
+
 class UI(tk.Frame):
+	PAYMENT_LOG_DIR = 'payment_logs'
 
 	def __init__(self, master):
 		tk.Frame.__init__(self, master)
 		self.widgets()
+
+	def log_payment(self, info:UIInfo, price):
+		if info.payment == UIPayment.CreditCard:
+			payment_method = 'CreditCard'
+		elif info.payment == UIPayment.DebitCard:
+			payment_method = 'DebitCard'
+		elif info.payment == UIPayment.Cash:
+			payment_method = 'Cash'
+		else:
+			payment_method = 'Unknown'
+
+		# Logging payment information
+		payment_info = {
+			'price': (str("{:.2f}".format(price))),
+			'payment_method': payment_method,
+			'datetime': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+			'departure_station': info.from_station, 
+			'arival_station': info.to_station,
+			'travel_class': 'FirstClass' if info.travel_class == UIClass.FirstClass else 'SecondClass',
+       		'ticket_type': 'Return' if info.way == UIWay.Return else 'Single',
+        	'discount': 'NoDiscount' if info.discount == UIDiscount.NoDiscount else 'TwentyDiscount' if info.discount == UIDiscount.TwentyDiscount else 'FortyDiscount',
+			'machine_number': '0001'  # can be implemented in the future
+		}
+
+		# Create the log directory if it doesn't exist
+		if not os.path.exists(self.PAYMENT_LOG_DIR):
+			os.makedirs(self.PAYMENT_LOG_DIR)
+
+		# Append the payment information to the JSON file
+		log_file_path = os.path.join(self.PAYMENT_LOG_DIR, 'payment_log.json')
+		with open(log_file_path, 'a') as log_file:
+			json.dump(payment_info, log_file)
+			log_file.write('\n')
 
 	def calculate_price(self, info: UIInfo) -> float:			
 
@@ -54,6 +93,7 @@ class UI(tk.Frame):
 			e = Error()
 			e.illegalRoute()
 		else:
+			self.log_payment(info, price)
 			if info.payment == UIPayment.CreditCard:
 				c = CreditCard()
 				c.connect()
@@ -72,6 +112,7 @@ class UI(tk.Frame):
 				coin.start()
 				coin.payment(str("{:.2f}".format(price)))
 				coin.stop()
+
 
 	def widgets(self):
 		self.master.title("Ticket machine")

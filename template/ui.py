@@ -15,7 +15,7 @@ class UI(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.widgets()
 
-	def handle_payment(self, info: UIInfo):			
+	def calculate_price(self, info: UIInfo) -> float:			
 
 		# **************************************
 		# Below is the code you need to refactor
@@ -44,8 +44,11 @@ class UI(tk.Frame):
 		# add 50 cents if paying with credit card
 		if info.payment == UIPayment.CreditCard:
 			price += 0.50
+
+		return price
 		
-		
+	def process_payment(self, info: UIInfo):
+		price = self.calculate_price(info)
 		# first check for illegal route
 		if info.from_station == info.to_station:
 			e = Error()
@@ -137,7 +140,7 @@ class UI(tk.Frame):
 		self.pack(fill=tk.BOTH, expand=1)
 	
 	def on_click_pay(self):
-		self.handle_payment(self.get_ui_info())
+		self.process_payment(self.get_ui_info())
 
 	def get_ui_info(self) -> UIInfo:
 		return UIInfo(from_station=self.from_station.get(),

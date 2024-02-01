@@ -15,11 +15,15 @@ class UI(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.widgets()
 
+<<<<<<< Updated upstream
 	def handle_payment(self, info: UIInfo):
 		if info.from_station == info.to_station:
 			e = Error()
 			e.illegalRoute()
 			
+=======
+	def calculate_price(self, info: UIInfo) -> float:		
+>>>>>>> Stashed changes
 
 		# **************************************
 		# Below is the code you need to refactor
@@ -41,6 +45,7 @@ class UI(tk.Frame):
 
 		# compute price
 		price: float = PricingTable.get_price (tariefeenheden, table_column)
+		
 		if info.way == UIWay.Return:
 			price *= 2
 
@@ -48,6 +53,7 @@ class UI(tk.Frame):
 		if info.payment == UIPayment.CreditCard:
 			price += 0.50
 		
+<<<<<<< Updated upstream
 		# pay
 		if info.payment == UIPayment.CreditCard:
 			c = CreditCard()
@@ -68,6 +74,31 @@ class UI(tk.Frame):
 			coin.stoppa()
 
 #region UI Set-up below -- you don't need to change anything
+=======
+		
+		# first check for illegal route
+		if info.from_station == info.to_station:
+			e = Error()
+			e.illegalRoute()
+		else:
+			if info.payment == UIPayment.CreditCard:
+				c = CreditCard()
+				c.connect()
+				ccid: int = c.begin_transaction(str("{:.2f}".format(price)))
+				c.end_transaction(ccid)
+				c.disconnect()
+			elif info.payment == UIPayment.DebitCard:
+				d = DebitCard()
+				d.connect()
+				dcid: int = d.begin_transaction(str("{:.2f}".format(price)))
+				d.end_transaction(dcid)
+				d.disconnect()
+			elif info.payment == UIPayment.Cash:
+				coin = IKEAMyntAtare2000()
+				coin.starta()
+				coin.betala(int(price*100))
+				coin.stoppa()
+>>>>>>> Stashed changes
 
 	def widgets(self):
 		self.master.title("Ticket machine")
@@ -136,7 +167,11 @@ class UI(tk.Frame):
 		self.pack(fill=tk.BOTH, expand=1)
 	
 	def on_click_pay(self):
+<<<<<<< Updated upstream
 		self.handle_payment(self.get_ui_info())
+=======
+		self.calculate_price(self.get_ui_info())
+>>>>>>> Stashed changes
 
 	def get_ui_info(self) -> UIInfo:
 		return UIInfo(from_station=self.from_station.get(),

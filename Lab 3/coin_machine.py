@@ -9,7 +9,7 @@ class IKEAMyntAtare2000:
 		messagebox.showinfo(message = "End of transaction, goodbye!")
 		
 	def betala(self, pris: int):
-		messagebox.showinfo(message = f"Please pay €{pris}")
+		messagebox.showinfo(message = f"Please pay {pris} EUR")
 
 
 #adapter to english code

@@ -2,6 +2,7 @@ from tariefeenheden import Tariefeenheden
 import tkinter as tk
 import os
 import json
+import math
 from datetime import datetime
 from tkinter import messagebox
 from pricing_table import PricingTable
@@ -33,6 +34,7 @@ class UI(tk.Frame):
 
 		# Logging payment information
 		payment_info = {
+			'ticket_id': '0001',  # can be implemented in the future
 			'price': (str("{:.2f}".format(price))),
 			'payment_method': payment_method,
 			'datetime': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -44,6 +46,7 @@ class UI(tk.Frame):
 			'machine_number': '0001'  # can be implemented in the future
 		}
 
+		# alter these two directory code snippets to for example send the logs to a remote server
 		# Create the log directory if it doesn't exist
 		if not os.path.exists(self.PAYMENT_LOG_DIR):
 			os.makedirs(self.PAYMENT_LOG_DIR)
@@ -55,11 +58,6 @@ class UI(tk.Frame):
 			log_file.write('\n')
 
 	def calculate_price(self, info: UIInfo) -> float:			
-
-		# **************************************
-		# Below is the code you need to refactor
-		# **************************************
-
 		# get number of tariefeenheden
 		tariefeenheden: int = Tariefeenheden.get_tariefeenheden(info.from_station, info.to_station)
 
@@ -68,15 +66,16 @@ class UI(tk.Frame):
 		if info.travel_class == UIClass.FirstClass:
 			table_column = 3
 
-		# then, on the discount
-		if info.discount == UIDiscount.TwentyDiscount:
-			table_column += 1
-		elif info.discount == UIDiscount.FortyDiscount:
-			table_column += 2
-
 		# compute price
-		price: float = PricingTable.get_price (tariefeenheden, table_column)
+		priceTable: float = PricingTable.get_priceTable (table_column)
 		
+		# given price calculation by NS
+		priceCalc = priceTable * 0.02 * tariefeenheden
+    
+        # Round price to higher multiple of € 0,10
+		price = math.ceil(priceCalc * 10) / 10
+
+		# double prices for returns
 		if info.way == UIWay.Return:
 			price *= 2
 
@@ -107,6 +106,7 @@ class UI(tk.Frame):
 				d.end_transaction(dcid)
 				d.disconnect()
 			elif info.payment == UIPayment.Cash:
+				# access Ikea coin class with addapter (coinMachine)
 				ikea_mynt_atare = IKEAMyntAtare2000()
 				coin = coinMachine(ikea_mynt_atare)
 				coin.start()
@@ -153,13 +153,7 @@ class UI(tk.Frame):
 		tk.Radiobutton(ticket_options_frame, text="One-way", variable=self.way, value=UIWay.OneWay.value).grid(row=8, sticky=tk.W)
 		tk.Radiobutton(ticket_options_frame, text="Return", variable=self.way, value=UIWay.Return.value).grid(row=9, sticky=tk.W)
 
-		# Discount
-		tk.Label(ticket_options_frame, text = "Discount:").grid(row=10, sticky=tk.W)
-		self.discount = tk.IntVar(value=UIDiscount.NoDiscount.value)
-		tk.Radiobutton(ticket_options_frame, text="No discount", variable=self.discount, value=UIDiscount.NoDiscount.value).grid(row=11, sticky=tk.W)
-		tk.Radiobutton(ticket_options_frame, text="20% discount", variable=self.discount, value=UIDiscount.TwentyDiscount.value).grid(row=12, sticky=tk.W)
-		tk.Radiobutton(ticket_options_frame, text="40% discount", variable=self.discount, value=UIDiscount.FortyDiscount.value).grid(row=13, sticky=tk.W)
-
+		
 		payment_frame = tk.Frame(self.master, highlightbackground="#cccccc", highlightthickness=1)
 		payment_frame.pack(fill=tk.BOTH, expand=1, padx=10, pady=10)
 

@@ -10,13 +10,13 @@ from creditcard import CreditCard
 from debitcard import DebitCard
 from coin_machine import IKEAMyntAtare2000, coinMachine
 from raise_error import Error
-from ui_info import UIPayment, UIClass, UIWay, UIDiscount, UIPayment, UIInfo
+from ui_info import UIPayment, UIClass, UIWay, UIPayment, UIInfo
 
 
 
 
 class UI(tk.Frame):
-	PAYMENT_LOG_DIR = 'payment_logs'
+	PAYMENT_LOG_DIR = 'tvm_payment_logs'
 
 	def __init__(self, master):
 		tk.Frame.__init__(self, master)
@@ -42,7 +42,6 @@ class UI(tk.Frame):
 			'arival_station': info.to_station,
 			'travel_class': 'FirstClass' if info.travel_class == UIClass.FirstClass else 'SecondClass',
        		'ticket_type': 'Return' if info.way == UIWay.Return else 'Single',
-        	'discount': 'NoDiscount' if info.discount == UIDiscount.NoDiscount else 'TwentyDiscount' if info.discount == UIDiscount.TwentyDiscount else 'FortyDiscount',
 			'machine_number': '0001'  # can be implemented in the future
 		}
 
@@ -64,9 +63,9 @@ class UI(tk.Frame):
 		# compute the column in the table based on choices
 		table_column = 0
 		if info.travel_class == UIClass.FirstClass:
-			table_column = 3
+			table_column = 1
 
-		# compute price
+		# compute price	
 		priceTable: float = PricingTable.get_priceTable (table_column)
 		
 		# given price calculation by NS
@@ -182,7 +181,6 @@ class UI(tk.Frame):
 			to_station=self.to_station.get(),
 			travel_class=self.travel_class.get(),
 			way=self.way.get(),
-			discount=self.discount.get(),
 			payment=self.payment.get())
 
 	def on_exit(self):

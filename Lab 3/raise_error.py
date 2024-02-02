@@ -1,5 +1,5 @@
 from tkinter import messagebox
-from ui_info import UIPayment, UIClass, UIWay, UIDiscount, UIPayment, UIInfo 
+from ui_info import UIPayment, UIClass, UIWay, UIPayment, UIInfo 
 
 class Error():
     def illegalRoute(self):

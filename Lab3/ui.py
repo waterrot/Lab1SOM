@@ -1,5 +1,6 @@
 from tariefeenheden import Tariefeenheden
 import tkinter as tk
+import csv
 import os
 import json
 import math
@@ -57,6 +58,7 @@ class UI(tk.Frame):
 			log_file.write('\n')
 
 	def calculate_price(self, info: UIInfo) -> float:			
+		
 		# get number of tariefeenheden
 		tariefeenheden: int = Tariefeenheden.get_tariefeenheden(info.from_station, info.to_station)
 

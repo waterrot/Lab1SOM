@@ -23,7 +23,7 @@ class UI(tk.Frame):
 		tk.Frame.__init__(self, master)
 		self.widgets()
 
-	def log_payment(self, info:UIInfo, price):
+	def log_payment(self, info:UIInfo, price, taxCollected):
 		if info.payment == UIPayment.CreditCard:
 			payment_method = 'CreditCard'
 		elif info.payment == UIPayment.DebitCard:
@@ -38,6 +38,7 @@ class UI(tk.Frame):
 			'ticket_id': '0001',  # can be implemented in the future
 			'price': (str("{:.2f}".format(price))),
 			'payment_method': payment_method,
+			'tax_collected': taxCollected ,
 			'datetime': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
 			'departure_station': info.from_station, 
 			'arival_station': info.to_station,
@@ -71,39 +72,52 @@ class UI(tk.Frame):
 		priceTable: float = PricingTable.get_priceTable (table_column)
 		
 		# given price calculation by NS
-		priceCalc = priceTable * 0.02 * tariefeenheden
-    
-        # Round price to higher multiple of € 0,10
-		price = math.ceil(priceCalc * 10) / 10
+		price = priceTable * 0.02 * tariefeenheden
 
 		# double prices for returns
 		if info.way == UIWay.Return:
 			price *= 2
 
+		return price
+	
+	def calculate_tax(self, priceCalc):
+		#implement tax, 9% in the Netherlands
+		price = priceCalc * 1.09
+		# Round price to higher multiple of € 0,10
+		price = math.ceil(price * 10) / 10
+
+		# Calculate how much tax is collected so this can be logged
+		taxCollected = (str("{:.2f}".format(price - priceCalc)))
+
+		return price, taxCollected
+
+	def calculate_payment_fees(self, price, info : UIInfo):
 		# add 50 cents if paying with credit card
 		if info.payment == UIPayment.CreditCard:
 			price += 0.50
-
 		return price
-		
+
 	def process_payment(self, info: UIInfo):
-		price = self.calculate_price(info)
+		priceBeforeTax = self.calculate_price(info)
+		priceAfterTax, taxCollected = self.calculate_tax(priceBeforeTax)
+		priceAfterFee = self.calculate_payment_fees(priceAfterTax, info)
+
 		# first check for illegal route
 		if info.from_station == info.to_station:
 			e = Error()
 			e.illegalRoute()
 		else:
-			self.log_payment(info, price)
+			self.log_payment(info, priceAfterFee, taxCollected)
 			if info.payment == UIPayment.CreditCard:
 				c = CreditCard()
 				c.connect()
-				ccid: int = c.begin_transaction(str("{:.2f}".format(price)))
+				ccid: int = c.begin_transaction(str("{:.2f}".format(priceAfterFee)))
 				c.end_transaction(ccid)
 				c.disconnect()
 			elif info.payment == UIPayment.DebitCard:
 				d = DebitCard()
 				d.connect()
-				dcid: int = d.begin_transaction(str("{:.2f}".format(price)))
+				dcid: int = d.begin_transaction(str("{:.2f}".format(priceAfterFee)))
 				d.end_transaction(dcid)
 				d.disconnect()
 			elif info.payment == UIPayment.Cash:
@@ -111,7 +125,7 @@ class UI(tk.Frame):
 				ikea_mynt_atare = IKEAMyntAtare2000()
 				coin = coinMachine(ikea_mynt_atare)
 				coin.start()
-				coin.payment(str("{:.2f}".format(price)))
+				coin.payment(str("{:.2f}".format(priceAfterFee)))
 				coin.stop()
 
 
